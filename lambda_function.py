@@ -88,13 +88,22 @@ def doc_parser(pdf_file, password):
 
 def parse_layoutPage(layoutPage, curves_list, page_num):
     """Recursively parse layoutPage objects found"""
-    for obj in layoutPage:
-        if isinstance(obj, LTCurve):
-            props = {'x':int(obj.x0),'y':int(obj.y0),'height': int(obj.height), 'width': int(obj.width), 'page':page_num}
-            # print(props)
-            curves_list.append(props)
-        elif isinstance(obj, LTFigure):
-            parse_layoutPage(obj, curves_list, page_num)
+	min_y = int(top/7)
+	print(min_y)
+	max_y = int(top/1.15)
+	print(max_y)
+
+	for obj in layoutPage:
+		if isinstance(obj, LTCurve):
+			y = int(top - obj.y1)
+			x = int(obj.x0)
+			h = int(obj.height)
+			w = int(obj.width)
+			if(h>=4 and w>=7 and w<23 and w>h*1.29 and x>26 and x<400 and y>min_y and y<max_y):
+				props = {'x': x, 'y': y, 'height': h, 'width': w, 'page':page_num}
+				curves_list.append(props)
+		elif isinstance(obj, LTFigure):
+			parse_layoutPage(obj, top, curves_list, page_num)
 
 def create_json(pdf_file_path, json_tmp, password=''):
     doc = doc_parser(pdf_file_path, password)
@@ -111,8 +120,10 @@ def create_json(pdf_file_path, json_tmp, password=''):
         interpreter.process_page(page)
         # receive the LTPage object for the page
         layoutPage = device.get_result()
-        page_num+=1
-        parse_layoutPage(layoutPage, data['curves'], page_num)
+        top_page = layoutPage.y1
+		print(layoutPage.y1, layoutPage.x1)
+		page_num+=1
+		parse_layoutPage(layoutPage, top_page, data['curves'], page_num)
 
     #write to JSON file
     with io.open(json_tmp, 'w', encoding='utf8') as outfile:
