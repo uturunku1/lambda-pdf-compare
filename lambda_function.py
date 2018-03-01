@@ -60,10 +60,10 @@ def create_html(pdf_file_path, newfile, password):
     #manager to store resources such as fonts, images
     rsrcmgr = PDFResourceManager()
     #set params for analysis.layout analizer returns a LTPage that is a tree with child objects, like textbox, figure, curve, text line
-    laparams = LAParams()
+    laparams = Layout.LAParams(all_texts=True, detect_vertical=True)
     with open(newfile,'w+') as f:
         # PDFDevice to translate content to our needs
-        device = HTMLConverter(rsrcmgr, f, laparams=laparams)
+        device = HTMLConverter(rsrcmgr, f, laparams=laparams, layoutmode='loose', showpageno=False, rect_colors={'curve': None})
         # processes page contents, renders intructions for device
         interpreter = PDFPageInterpreter(rsrcmgr, device)
         for page in doc.get_pages():
@@ -86,24 +86,21 @@ def doc_parser(pdf_file, password):
             raise PDFTextExtractionNotAllowed
         return doc
 
-def parse_layoutPage(layoutPage, curves_list, page_num):
+def parse_layoutPage(layoutPage, top, curves_list, page_num):
     """Recursively parse layoutPage objects found"""
-	min_y = int(top/7)
-	print(min_y)
-	max_y = int(top/1.15)
-	print(max_y)
-
-	for obj in layoutPage:
-		if isinstance(obj, LTCurve):
-			y = int(top - obj.y1)
-			x = int(obj.x0)
-			h = int(obj.height)
-			w = int(obj.width)
-			if(h>=4 and w>=7 and w<23 and w>h*1.29 and x>26 and x<400 and y>min_y and y<max_y):
-				props = {'x': x, 'y': y, 'height': h, 'width': w, 'page':page_num}
-				curves_list.append(props)
-		elif isinstance(obj, LTFigure):
-			parse_layoutPage(obj, top, curves_list, page_num)
+    min_y = int(top/7)
+    max_y = int(top/1.15)
+    for obj in layoutPage:
+        if isinstance(obj, LTCurve):
+            y = int(top - obj.y1)
+            x = int(obj.x0)
+            h = int(obj.height)
+            w = int(obj.width)
+            if(h>=4 and w>=7 and w<23 and w>h*1.29 and x>26 and x<400 and y>min_y and y<max_y):
+                props = {'x': x, 'y': y, 'height': h, 'width': w, 'page':page_num}
+                curves_list.append(props)
+        elif isinstance(obj, LTFigure):
+            parse_layoutPage(obj, top, curves_list, page_num)
 
 def create_json(pdf_file_path, json_tmp, password=''):
     doc = doc_parser(pdf_file_path, password)
@@ -121,9 +118,9 @@ def create_json(pdf_file_path, json_tmp, password=''):
         # receive the LTPage object for the page
         layoutPage = device.get_result()
         top_page = layoutPage.y1
-		print(layoutPage.y1, layoutPage.x1)
-		page_num+=1
-		parse_layoutPage(layoutPage, top_page, data['curves'], page_num)
+        logger.info('width of page {} and height {}'.format(layoutPage.x1, layoutPage.y1))
+        page_num+=1
+        parse_layoutPage(layoutPage, top_page, data['curves'], page_num)
 
     #write to JSON file
     with io.open(json_tmp, 'w', encoding='utf8') as outfile:

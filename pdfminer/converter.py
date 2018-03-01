@@ -112,7 +112,7 @@ class PDFPageAggregator(PDFLayoutAnalyzer):
     def __init__(self, rsrcmgr, pageno=1, laparams=None):
         PDFLayoutAnalyzer.__init__(self, rsrcmgr, pageno=pageno, laparams=laparams)
         self.result = None
-    
+
     def receive_layout(self, ltpage):
         self.result = ltpage
 
@@ -149,7 +149,7 @@ class PDFConverter(PDFLayoutAnalyzer):
         fp.write(data)
         fp.close()
         return name
-    
+
 
 ##  TextConverter
 ##
@@ -199,13 +199,13 @@ class HTMLConverter(PDFConverter):
         'curve': 'black',
         'page': 'gray',
         }
-    
+
     TEXT_COLORS = {
         'textbox': 'blue',
         'char': 'black',
         }
 
-    def __init__(self, rsrcmgr, outfp, pageno=1, laparams=None, 
+    def __init__(self, rsrcmgr, outfp, pageno=1, laparams=None,
                  scale=1, fontscale=0.7, layoutmode='normal', showpageno=True,
                  pagemargin=50, outdir=None,
                  rect_colors={'curve':'black', 'page':'gray'},
@@ -274,31 +274,38 @@ class HTMLConverter(PDFConverter):
             self.write('</span>\n')
 
     def begin_textbox(self, color, borderwidth, x, y, w, h, writing_mode):
-        self._fontstack.append(self._font)
+        # self._fontstack.append(self._font)
         self._font = None
-        self.write('<div style="position:absolute; border: %s %dpx solid; writing-mode:%s; '
-                   'left:%dpx; top:%dpx; width:%dpx; height:%dpx;">' %
-                   (color, borderwidth, writing_mode,
-                    x*self.scale, (self._yoffset-y)*self.scale,
+        self.write('<div style="position:absolute;left:%dpx; top:%dpx; width:%dpx; height:%dpx;' %
+                   (x*self.scale, (self._yoffset-y)*self.scale,
                     w*self.scale, h*self.scale))
-    
+        # self.write('<div style="position:absolute; border: %s %dpx solid; writing-mode:%s; '
+        #            'left:%dpx; top:%dpx; width:%dpx; height:%dpx;">' %
+        #            (color, borderwidth, writing_mode,
+        #             x*self.scale, (self._yoffset-y)*self.scale,
+        #             w*self.scale, h*self.scale))
+
     def put_text(self, text, fontname, fontsize):
         font = (fontname, fontsize)
-        if font != self._font:
-            if self._font is not None:
-                self.write('</span>')
-            self.write('<span style="font-family: %s; font-size:%dpx">' %
+        if self._font == None:
+            self.write('font-family: %s; font-size:%dpx;">' %
                        (fontname, fontsize * self.scale * self.fontscale))
-            self._font = font
+        self._font = font
+        # if font != self._font:
+            # if self._font is not None:
+            #     self.write('</span>')
+            # self.write('<span style="font-family: %s; font-size:%dpx">' %
+            #            (fontname, fontsize * self.scale * self.fontscale))
+            # self._font = font
         self.write_text(text)
 
     def put_newline(self):
         self.write('<br>')
 
     def end_textbox(self, color):
-        if self._font is not None:
-            self.write('</span>')
-        self._font = self._fontstack.pop()
+        # if self._font is not None:
+        #     self.write('</span>')
+        # self._font = self._fontstack.pop()
         self.write('</div>')
 
     def receive_layout(self, ltpage):
@@ -307,7 +314,7 @@ class HTMLConverter(PDFConverter):
                 self.place_border('textgroup', 1, item)
                 for child in item:
                     show_group(child)
-        
+
         def render(item):
             if isinstance(item, LTPage):
                 self._yoffset += item.y1
@@ -359,7 +366,7 @@ class HTMLConverter(PDFConverter):
                         self.put_text(item.get_text(), item.fontname, item.size)
                     elif isinstance(item, LTText):
                         self.write_text(item.get_text())
-        
+
         render(ltpage)
         self._yoffset += self.pagemargin
 
@@ -380,7 +387,7 @@ class XMLConverter(PDFConverter):
 
     def write_footer(self):
         self.outfp.write('</pages>\n')
-    
+
     def write_text(self, text):
         self.outfp.write(htmlescape(text, self.outfp.encoding))
 
@@ -394,7 +401,7 @@ class XMLConverter(PDFConverter):
                 for child in item:
                     show_group(child)
                 self.outfp.write('</textgroup>\n')
-        
+
         def render(item):
             if isinstance(item, LTPage):
                 self.outfp.write('<page id="%s" bbox="%s" rotate="%d">\n' %
@@ -453,7 +460,7 @@ class XMLConverter(PDFConverter):
                                      (item.width, item.height))
             else:
                 assert 0, item
-        
+
         render(ltpage)
 
     def close(self):

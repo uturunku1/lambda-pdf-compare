@@ -1,7 +1,7 @@
 # LAMBDA-PDF-COMPARE
 
 ## Description
-This Lambda function takes a PDF file, extracts the text content and converts it to HTML file. This lambda function is called every time a new file is uploaded to a particular S3 bucket. The output file is saved in a different S3 bucket. This program uses the Python library PDFMiner. The required dependencies are compatible with Amazon Linux System and are already organized to be deployed as an zip file.
+This Lambda function takes a PDF file, extracts the text content and converts it to an HTML file. It also gets the coordinates of curved elements that appear in the page and writes it to a JSON file. This lambda function is called every time a new PDF is uploaded to a particular S3 bucket. The output files are saved in a different S3 bucket. This program uses the Python library PDFMiner. The required dependencies are compatible with Amazon Linux System and are already organized to be deployed as an zip file.
 
 ## Lambda Settings
 
