@@ -90,14 +90,24 @@ def parse_layoutPage(layoutPage, top, curves_list, page_num):
     """Recursively parse layoutPage objects found"""
     min_y = int(top/7)
     max_y = int(top/1.15)
+    def point2coord(pt):
+        x, y = pt
+        return (int(x), top-int(y))
+    def bbox2coord(bbox):
+        x0, y0, x1, y1 = bbox
+        return (int(x0), top-int(y0), int(x1), top-int(y1))
     for obj in layoutPage:
         if isinstance(obj, LTCurve):
-            y = int(top - obj.y1)
+            y = top - int(obj.y1)
             x = int(obj.x0)
             h = int(obj.height)
             w = int(obj.width)
+            lw = obj.linewidth
+            bbox = list(bbox2coord(obj.bbox))
+            #[(x0, y0), (x1, y0), (x1, y1), (x0, y1)]
+            pts = list(map(point2coord, obj.pts))
             if(h>=4 and w>=7 and w<23 and w>h*1.29 and x>26 and x<400 and y>min_y and y<max_y):
-                props = {'x': x, 'y': y, 'height': h, 'width': w, 'page':page_num}
+                props = {'x': x, 'y': y, 'height': h, 'width': w, 'linewidth':lw, 'bbox':bbox,'points':pts,'page':page_num}
                 curves_list.append(props)
         elif isinstance(obj, LTFigure):
             parse_layoutPage(obj, top, curves_list, page_num)

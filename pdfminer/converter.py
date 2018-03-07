@@ -276,9 +276,12 @@ class HTMLConverter(PDFConverter):
     def begin_textbox(self, color, borderwidth, x, y, w, h, writing_mode):
         # self._fontstack.append(self._font)
         self._font = None
-        self.write('<div style="position:absolute;left:%dpx; top:%dpx; width:%dpx; height:%dpx;' %
-                   (x*self.scale, (self._yoffset-y)*self.scale,
-                    w*self.scale, h*self.scale))
+
+        self.write('<div>')
+        # self.write('<div style="position:absolute;left:%dpx; top:%dpx; width:%dpx; height:%dpx;' %
+        #            (x*self.scale, (self._yoffset-y)*self.scale,
+        #             w*self.scale, h*self.scale))
+
         # self.write('<div style="position:absolute; border: %s %dpx solid; writing-mode:%s; '
         #            'left:%dpx; top:%dpx; width:%dpx; height:%dpx;">' %
         #            (color, borderwidth, writing_mode,
@@ -287,9 +290,9 @@ class HTMLConverter(PDFConverter):
 
     def put_text(self, text, fontname, fontsize):
         font = (fontname, fontsize)
-        if self._font == None:
-            self.write('font-family: %s; font-size:%dpx;">' %
-                       (fontname, fontsize * self.scale * self.fontscale))
+        # if self._font == None:
+        #     self.write('font-family: %s; font-size:%dpx;">' %
+        #                (fontname, fontsize * self.scale * self.fontscale))
         self._font = font
         # if font != self._font:
             # if self._font is not None:
