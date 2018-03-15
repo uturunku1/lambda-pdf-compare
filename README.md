@@ -24,4 +24,4 @@ Set the memory to `1536 MB`(XD) AND increase the timeout to `13 seconds`.
 To use S3, you will need to create a execution role with the correct permission.
 
 ### Triggers and Data
-The trigger event will be the new upload of an S3 PDF file in a particular bucket you selected. In the file lambda_function.py, change the value of the variable bucket_to_upload to be correct bucket where you will output your HTML file. Also make sure is a different bucket that the one that triggers the function.
+The trigger event will be the new upload of an S3 PDF file in a particular bucket you selected. In the file lambda_function.py, change the value of the variable bucket_to_upload to be correct bucket where you will output your HTML and JSON files. Also make sure is a different bucket that the one that triggers the function.
