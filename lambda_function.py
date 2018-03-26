@@ -7,6 +7,7 @@ import sys
 import uuid
 import logging
 import io
+import hashlib
 s3 = boto3.client('s3')
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -109,8 +110,12 @@ def parse_layoutPage(layoutPage, top, curves_list, text_list, page_num):
         elif isinstance(obj, LTCurve):
             lw = obj.linewidth
             pts = list(map(point2coord, obj.pts))
+            ptsToList = [i for oi in pts for i in oi]
+            ptsStr = ''.join(map(str, ptsToList))
+            hashStr =  str(x)+ str(y)+str(h)+str(w)+ptsStr
+            hashID = (hashlib.md5(hashStr.encode())).hexdigest()
             if(h>=4 and w>=7 and w<23 and w>h*1.29 and x>26 and x<400 and y>min_y and y<max_y):
-                prop_curves = {'x': x, 'y': y, 'height': h, 'width': w, 'linewidth':lw, 'bbox':bbox,'points':pts,'page':page_num}
+                prop_curves = {'id':hashID,'x': x, 'y': y, 'height': h, 'width': w, 'linewidth':lw, 'bbox':bbox,'points':pts,'page':page_num}
                 curves_list.append(prop_curves)
         elif isinstance(obj, LTFigure):
             for child in obj:
@@ -118,7 +123,7 @@ def parse_layoutPage(layoutPage, top, curves_list, text_list, page_num):
         elif isinstance(obj, LTTextBox):
             text = obj.get_text()
             print(text)
-            prop_text={'x':x,'y':y,'width':w,'height':h,'value':text}
+            prop_text={'x':x,'y':y,'width':w,'height':h,'value':text,'page': page_num}
             try:
                 for child in obj:
                     render(child)
@@ -137,15 +142,20 @@ def create_json(pdf_file_path, json_tmp, password=''):
     interpreter = PDFPageInterpreter(rsrcmgr, device)
     page_num = 0
     data = {}
+    data['pages'] = []
     data['curves'] = []
-    data['text'] = []
+    data['text']=[]
     for page in doc.get_pages():
         interpreter.process_page(page)
         # receive the LTPage object for the page
         layoutPage = device.get_result()
-        top_page = int(layoutPage.y1)
-        logger.info('width of page {} and height {}'.format(layoutPage.x1, layoutPage.y1))
         page_num+=1
+        top_page = int(layoutPage.y1)
+        width_page = int(layoutPage.x1)
+        prop_page= {'width':width_page, 'height':top_page, 'page': page_num}
+        (data['pages']).append(prop_page)
+        logger.info('width of page {} and height {}'.format(layoutPage.x1, layoutPage.y1))
+
         parse_layoutPage(layoutPage, top_page, data['curves'], data['text'], page_num)
     #write to JSON file
     with io.open(json_tmp, 'w', encoding='utf8') as outfile:
